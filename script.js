@@ -43,11 +43,15 @@
     }
   }
 
+  // Firebase persistence - localStorage sadece UI state için
   function persist() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        authMode: state.authMode,
+        ui: state.ui
+      }));
     } catch {
-      toast('Depolama Hatası', 'Tarayıcı depolaması dolu olabilir. Albüm bilgileri kaydedilemedi.', 'warning');
+      toast('Depolama Hatası', 'Tarayıcı depolaması dolu olabilir. UI bilgileri kaydedilemedi.', 'warning');
     }
   }
 
@@ -202,6 +206,27 @@
       // ignore
     }
   }
+
+  // Firebase Auth state listener
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      state.currentUser = {
+        id: user.uid,
+        name: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        provider: user.providerData[0]?.providerId || 'email',
+        avatarUrl: user.photoURL || ''
+      };
+      await loadUserAlbums();
+      showHome();
+      toast('Hoş Geldin', state.currentUser.name, 'success');
+    } else {
+      state.currentUser = null;
+      state.albums = [];
+      showAuth();
+    }
+    persist();
+  });
 
   function toast(title, msg, type = 'info') {
     const el = document.createElement('div');
@@ -793,181 +818,103 @@
           .slice(0, 12)
       : [];
 
-    const albumId = safeId('alb');
-    const mediaMeta = [];
-
-    for (const m of pendingMedia) {
-      const mediaId = safeId('m');
-      mediaMeta.push({
-        id: mediaId,
-        type: m.type,
-        name: m.name,
-        createdAt: nowIso(),
-        liked: false,
-      });
-      await idbPutMedia({
-        id: mediaId,
-        albumId,
-        type: m.type,
-        name: m.name,
-        blob: m.file,
-        createdAt: nowIso(),
-      });
-    }
-
-    const album = {
-      id: albumId,
-      ownerId: state.currentUser?.id,
+    // Firebase'e albümü kaydet
+    const albumData = {
       name,
       tags,
       description: desc,
-      createdAt: nowIso(),
+      media: [], // Başlangıçta boş
       views: 0,
+      liked: false
+    };
+
+    const albumId = await saveAlbumToFirebase(albumData);
+    if (!albumId) return null;
+
+    // Medyaları Firebase Storage'a yükle
+    const mediaMeta = [];
+    for (const m of pendingMedia) {
+      const mediaId = safeId('m');
+      const mediaData = await uploadMediaToFirebase(m.file, albumId, mediaId);
+      if (mediaData) {
+        mediaMeta.push({
+          id: mediaId,
+          ...mediaData,
+          liked: false
+        });
+      }
+    }
+
+    // Albümü medyalarla güncelle
+    await updateAlbumInFirebase(albumId, { media: mediaMeta });
+
+    // State'i güncelle
+    const album = {
+      id: albumId,
+      userId: state.currentUser.id,
+      name,
+      tags,
+      description: desc,
       media: mediaMeta,
+      views: 0,
+      liked: false,
+      createdAt: nowIso(),
+      updatedAt: nowIso()
     };
 
     state.albums.unshift(album);
-    persist();
     updateStats();
-    toast('Albüm Oluşturuldu', 'Albüm anında hazır. İçeriği görüntüleniyor…', 'success');
+    renderAlbumsGrid();
+    renderFeatured();
 
-    resetCreateForm();
-    openAlbum(album.id);
-    return album;
+    // Formu temizle
+    pendingMedia = [];
+    const nameInput = $('#album-name');
+    const tagsInput = $('#album-tags');
+    const descInput = $('#album-description');
+    const grid = $('#preview-grid');
+    if (nameInput) nameInput.value = '';
+    if (tagsInput) tagsInput.value = '';
+    if (descInput) descInput.value = '';
+    if (grid) grid.innerHTML = '';
+
+    toast('Başarılı', `"${name}" albümü oluşturuldu`, 'success');
+    return albumId;
   }
 
-  function togglePassword() {
-    const input = $('#password');
-    const icon = $('.toggle-password i');
-    if (!input) return;
-    const isPw = input.getAttribute('type') !== 'text';
-    input.setAttribute('type', isPw ? 'text' : 'password');
-    if (icon) icon.className = `fas ${isPw ? 'fa-eye-slash' : 'fa-eye'}`;
-  }
+async function handleAuthSubmit() {
+    const email = String($('#email')?.value || '').trim().toLowerCase();
+    const pw = String($('#password')?.value || '');
 
-  async function quickLogin(provider) {
-    const name = provider === 'guest' ? 'Misafir' : provider === 'google' ? 'Google Kullanıcısı' : 'Apple Kullanıcısı';
-    const email = provider === 'guest' ? `guest_${Date.now()}@myflix.local` : `${provider}_${Date.now()}@myflix.local`;
-    const avatarUrl = `https://picsum.photos/seed/${encodeURIComponent(email)}/80/80`;
-
-    const user = { id: safeId('u'), name, email, provider, avatarUrl };
-    state.currentUser = user;
-    persist();
-    toast('Giriş Başarılı', `${name} olarak devam ediyorsun.`, 'success');
-    showApp();
-  }
-
-  function toggleAuthMode() {
-    setAuthUI(state.authMode === 'login' ? 'signup' : 'login');
-  }
-
-  function showAllFeatured() {
-    toast('Öne Çıkanlar', 'Öne çıkanlar, albümlerdeki içeriklerden otomatik oluşur.', 'info');
-  }
-
-  function scrollFeatured(dir) {
-    const container = $('#featured-container');
-    if (!container) return;
-    const amount = Math.round(container.clientWidth * 0.85);
-    container.scrollBy({ left: dir === 'prev' ? -amount : amount, behavior: 'smooth' });
-  }
-
-  function shareAlbum() {
-    const album = state.albums.find((a) => a.id === state.ui.activeAlbumId);
-    if (!album) return;
-    const text = `MYFLIX Albüm: ${album.name}\n${album.description || ''}\nÖğe: ${(album.media || []).length}`;
-    copyToClipboard(text);
-  }
-
-  function editAlbum() {
-    const album = state.albums.find((a) => a.id === state.ui.activeAlbumId);
-    if (!album) return;
-
-    const newName = window.prompt('Albüm Adı', album.name || '') ?? album.name;
-    const newDesc = window.prompt('Albüm Açıklaması', album.description || '') ?? album.description;
-    const newTags = window.prompt('Etiketler (virgülle)', (album.tags || []).join(', ')) ?? (album.tags || []).join(', ');
-
-    const name = String(newName).trim();
-    if (!name) {
-      toast('İptal', 'Albüm adı boş olamaz.', 'warning');
+    if (!email || !pw) {
+      toast('Eksik Bilgi', 'E-posta ve şifre gerekli.', 'warning');
       return;
     }
 
-    album.name = name;
-    album.description = String(newDesc || '').trim();
-    album.tags = String(newTags || '')
-      .split(',')
-      .map((t) => t.trim())
-      .filter(Boolean)
-      .slice(0, 12);
-
-    persist();
-    toast('Güncellendi', 'Albüm bilgileri kaydedildi.', 'success');
-    renderAlbumDetail();
-    renderAlbumsGrid(getSearchQuery());
-    renderFeatured();
+    if (state.authMode === 'signup') {
+      const name = email.split('@')[0] || 'Kullanıcı';
+      await signUpWithEmail(email, pw, name);
+    } else {
+      await signInWithEmail(email, pw);
+    }
   }
 
-  function deleteAlbum() {
+  function deleteAlbum(albumId) {
     const album = state.albums.find((a) => a.id === state.ui.activeAlbumId);
     if (!album) return;
     const ok = window.confirm(`"${album.name}" albümü silinsin mi?`);
     if (!ok) return;
 
-    const media = Array.isArray(album.media) ? album.media : [];
-    media.forEach((m) => {
-      if (m?.id) revokeMediaUrl(m.id);
+    deleteAlbumFromFirebase(albumId).then(success => {
+      if (success) {
+        state.albums = state.albums.filter((a) => a.id !== album.id);
+        state.ui.activeAlbumId = null;
+        toast('Silindi', 'Albüm kaldırıldı.', 'success');
+        showAlbums();
+        renderFeatured();
+        updateStats();
+      }
     });
-
-    idbDeleteAlbumMedia(album.id).catch(() => {
-      // ignore
-    });
-
-    state.albums = state.albums.filter((a) => a.id !== album.id);
-    state.ui.activeAlbumId = null;
-    persist();
-    toast('Silindi', 'Albüm kaldırıldı.', 'success');
-    showAlbums();
-    renderFeatured();
-    updateStats();
-  }
-
-  function likeMedia() {
-    if (!activeModalRef) return;
-    const album = state.albums.find((a) => a.id === activeModalRef.albumId);
-    const media = album?.media?.find((m) => m.id === activeModalRef.mediaId);
-    if (!media) return;
-    media.liked = !media.liked;
-    persist();
-    toast(media.liked ? 'Beğenildi' : 'Beğeni kaldırıldı', media.name || 'Medya', media.liked ? 'success' : 'info');
-  }
-
-  function downloadMedia() {
-    if (!activeModalRef) return;
-    const album = state.albums.find((a) => a.id === activeModalRef.albumId);
-    const media = album?.media?.find((m) => m.id === activeModalRef.mediaId);
-    if (!media) return;
-
-    ensureMediaUrl(media.id).then((url) => {
-      if (!url) return;
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = media.name || (media.type === 'video' ? 'video.mp4' : 'image.jpg');
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      toast('İndiriliyor', media.name || 'Medya', 'info');
-    });
-  }
-
-  function shareMedia() {
-    if (!activeModalRef) return;
-    const album = state.albums.find((a) => a.id === activeModalRef.albumId);
-    const media = album?.media?.find((m) => m.id === activeModalRef.mediaId);
-    if (!album || !media) return;
-
-    const text = `MYFLIX Medya: ${media.name || ''}\nAlbüm: ${album.name || ''}`;
-    copyToClipboard(text);
   }
 
   function copyToClipboard(text) {
@@ -1011,60 +958,25 @@
 
   function logout() {
     closeUserMenu();
-    state.currentUser = null;
-    state.ui.activeAlbumId = null;
-    persist();
-    showAuth();
+    signOut();
   }
 
   function bindAuth() {
     const form = $('#auth-form');
     if (!form) return;
 
-    form.addEventListener('submit', (ev) => {
+    form.addEventListener('submit', async (ev) => {
       ev.preventDefault();
-
-      const email = String($('#email')?.value || '').trim().toLowerCase();
-      const pw = String($('#password')?.value || '');
-
-      if (!email || !pw) {
-        toast('Eksik Bilgi', 'E-posta ve şifre gerekli.', 'warning');
-        return;
-      }
-
-      if (state.authMode === 'signup') {
-        if (state.users[email]) {
-          toast('Kayıt Başarısız', 'Bu e-posta zaten kayıtlı.', 'warning');
-          return;
-        }
-
-        const name = email.split('@')[0] || 'Kullanıcı';
-        const user = {
-          id: safeId('u'),
-          name,
-          email,
-          password: pw,
-          avatarUrl: `https://picsum.photos/seed/${encodeURIComponent(email)}/80/80`,
-        };
-        state.users[email] = user;
-        state.currentUser = { id: user.id, name: user.name, email: user.email, provider: 'email', avatarUrl: user.avatarUrl };
-        persist();
-        toast('Kayıt Başarılı', 'Hesabın oluşturuldu.', 'success');
-        showApp();
-        return;
-      }
-
-      const user = state.users[email];
-      if (!user || user.password !== pw) {
-        toast('Giriş Başarısız', 'E-posta veya şifre hatalı.', 'danger');
-        return;
-      }
-
-      state.currentUser = { id: user.id, name: user.name, email: user.email, provider: 'email', avatarUrl: user.avatarUrl };
-      persist();
-      toast('Hoş geldin', 'Giriş başarılı.', 'success');
-      showApp();
+      await handleAuthSubmit();
     });
+
+    // Social login buttons
+    const googleBtn = $('#google-login-btn');
+    if (googleBtn) {
+      googleBtn.addEventListener('click', async () => {
+        await signInWithGoogle();
+      });
+    }
   }
 
   function bindCreate() {
@@ -1142,6 +1054,159 @@
         closeUserMenu();
       }
     });
+  }
+
+  // Firebase Functions
+  async function loadUserAlbums() {
+    if (!state.currentUser) return;
+    try {
+      const snapshot = await db.collection('albums')
+        .where('userId', '==', state.currentUser.id)
+        .orderBy('createdAt', 'desc')
+        .get();
+      
+      state.albums = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      updateStats();
+      renderAlbumsGrid();
+      renderFeatured();
+    } catch (error) {
+      console.error('Albümler yüklenemedi:', error);
+      toast('Hata', 'Albümler yüklenemedi', 'danger');
+    }
+  }
+
+  async function saveAlbumToFirebase(albumData) {
+    if (!state.currentUser) return null;
+    try {
+      const docRef = await db.collection('albums').add({
+        ...albumData,
+        userId: state.currentUser.id,
+        createdAt: nowIso(),
+        updatedAt: nowIso()
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error('Albüm kaydedilemedi:', error);
+      toast('Hata', 'Albüm kaydedilemedi', 'danger');
+      return null;
+    }
+  }
+
+  async function updateAlbumInFirebase(albumId, updates) {
+    if (!state.currentUser) return false;
+    try {
+      await db.collection('albums').doc(albumId).update({
+        ...updates,
+        updatedAt: nowIso()
+      });
+      return true;
+    } catch (error) {
+      console.error('Albüm güncellenemedi:', error);
+      toast('Hata', 'Albüm güncellenemedi', 'danger');
+      return false;
+    }
+  }
+
+  async function deleteAlbumFromFirebase(albumId) {
+    if (!state.currentUser) return false;
+    try {
+      // Önce albümdeki medyaları Firebase Storage'dan sil
+      const album = state.albums.find(a => a.id === albumId);
+      if (album && Array.isArray(album.media)) {
+        for (const media of album.media) {
+          if (media.storagePath) {
+            try {
+              await storage.ref(media.storagePath).delete();
+            } catch (e) {
+              console.warn('Medya silinemedi:', e);
+            }
+          }
+        }
+      }
+      
+      // Albümü Firestore'dan sil
+      await db.collection('albums').doc(albumId).delete();
+      return true;
+    } catch (error) {
+      console.error('Albüm silinemedi:', error);
+      toast('Hata', 'Albüm silinemedi', 'danger');
+      return false;
+    }
+  }
+
+  async function uploadMediaToFirebase(file, albumId, mediaId) {
+    if (!state.currentUser) return null;
+    try {
+      const storagePath = `users/${state.currentUser.id}/albums/${albumId}/${mediaId}_${file.name}`;
+      const storageRef = storage.ref(storagePath);
+      
+      await storageRef.put(file);
+      const downloadUrl = await storageRef.getDownloadURL();
+      
+      return {
+        storagePath,
+        downloadUrl,
+        type: file.type.startsWith('video/') ? 'video' : 'image',
+        name: file.name,
+        size: file.size,
+        createdAt: nowIso()
+      };
+    } catch (error) {
+      console.error('Medya yüklenemedi:', error);
+      toast('Hata', 'Medya yüklenemedi', 'danger');
+      return null;
+    }
+  }
+
+  // Firebase Authentication Functions
+  async function signInWithEmail(email, password) {
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      return true;
+    } catch (error) {
+      console.error('Giriş hatası:', error);
+      toast('Giriş Hatası', 'E-posta veya şifre hatalı', 'danger');
+      return false;
+    }
+  }
+
+  async function signUpWithEmail(email, password, name) {
+    try {
+      const result = await auth.createUserWithEmailAndPassword(email, password);
+      await result.user.updateProfile({ displayName: name });
+      return true;
+    } catch (error) {
+      console.error('Kayıt hatası:', error);
+      toast('Kayıt Hatası', 'Bu e-posta zaten kullanımda veya geçersiz', 'danger');
+      return false;
+    }
+  }
+
+  async function signInWithGoogle() {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+      return true;
+    } catch (error) {
+      console.error('Google giriş hatası:', error);
+      toast('Giriş Hatası', 'Google ile giriş başarısız', 'danger');
+      return false;
+    }
+  }
+
+  async function signOut() {
+    try {
+      await auth.signOut();
+      return true;
+    } catch (error) {
+      console.error('Çıkış hatası:', error);
+      toast('Çıkış Hatası', 'Çıkış yapılamadı', 'danger');
+      return false;
+    }
   }
 
   function initViewButtons() {
