@@ -1,300 +1,109 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyFlix Gallery - Netflix Tarzı Galeri</title>
-    
-    <!-- Font Packages -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Icon Libraries -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="styles.css">
-    
-    <!-- Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyFlix Gallery</title>
+
+  <!-- Font Packages -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
 </head>
 <body>
-    <!-- Authentication Section -->
-    <section class="auth-section">
-        <div class="auth-container">
-            <div class="auth-card">
-                <div class="auth-header">
-                    <div class="auth-logo">
-                        <i class="fas fa-play-circle"></i>
-                        <span>MYFLIX</span>
-                    </div>
-                    <h1 class="auth-title">Giriş Yap</h1>
-                    <p class="auth-subtitle">Hesabınıza erişin</p>
-                </div>
-
-                <form id="auth-form" class="auth-form">
-                    <div class="name-field" style="display: none;">
-                        <div class="input-group">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="name" placeholder="Adınız" required>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" placeholder="E-posta adresiniz" required>
-                    </div>
-
-                    <div class="input-group">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" placeholder="Şifreniz" required>
-                        <button type="button" class="toggle-password">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-
-                    <button type="submit" class="auth-submit">Giriş Yap</button>
-                </form>
-
-                <div class="auth-divider">
-                    <span>veya</span>
-                </div>
-
-                <div class="social-login">
-                    <button type="button" id="google-login-btn" class="social-btn google-btn">
-                        <i class="fab fa-google"></i>
-                        Google ile Giriş
-                    </button>
-                    <button type="button" id="apple-login-btn" class="social-btn apple-btn">
-                        <i class="fab fa-apple"></i>
-                        Apple ile Giriş
-                    </button>
-                    <button type="button" id="guest-login-btn" class="social-btn guest-btn">
-                        <i class="fas fa-user-secret"></i>
-                        Misafir Girişi
-                    </button>
-                </div>
-
-                <div class="auth-switch">
-                    <span id="auth-switch-text">Hesabınız yok mu? </span>
-                    <a href="#" id="auth-switch-link">Kaydolun</a>
-                </div>
-            </div>
+  <!-- Authentication Section -->
+  <section id="auth-section" class="auth-section">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <i class="fas fa-play-circle"></i>
+          <span class="logo-text">MYFLIX</span>
+          <h1>Giriş Yap</h1>
+          <p>Hesabınıza erişin</p>
         </div>
-    </section>
 
-    <!-- Main Application -->
-    <div class="main-app" style="display: none;">
-        <!-- Premium Navigation Header -->
-        <header class="premium-header">
-            <div class="header-container">
-                <div class="logo-section">
-                    <div class="logo">
-                        <i class="fas fa-play-circle"></i>
-                        <span>MYFLIX</span>
-                    </div>
-                </div>
+        <form id="auth-form">
+          <div class="input-group">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="email" placeholder="E-posta adresiniz" required>
+          </div>
+          <div class="input-group">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" placeholder="Şifreniz" required>
+            <button type="button" id="toggle-password">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <button type="submit" class="btn-primary">Giriş Yap</button>
+        </form>
 
-                <nav class="main-nav">
-                    <div class="nav-item active" data-page="home">
-                        <i class="fas fa-home"></i>
-                        <span>Anasayfa</span>
-                    </div>
-                    <div class="nav-item" data-page="explore">
-                        <i class="fas fa-compass"></i>
-                        <span>Keşfet</span>
-                    </div>
-                    <div class="nav-item" data-page="albums">
-                        <i class="fas fa-images"></i>
-                        <span>Albümler</span>
-                    </div>
-                    <div class="nav-item" data-page="create">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Oluştur</span>
-                    </div>
-                </nav>
+        <div class="auth-divider"><span>veya</span></div>
 
-                <div class="header-actions">
-                    <div class="search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Albümler, medya...">
-                    </div>
-
-                    <div class="user-section">
-                        <div class="view-toggle">
-                            <button class="view-btn active" data-view="grid" title="Grid Görünüm">
-                                <i class="fas fa-th"></i>
-                            </button>
-                            <button class="view-btn" data-view="list" title="Liste Görünüm">
-                                <i class="fas fa-list"></i>
-                            </button>
-                        </div>
-
-                        <div class="user-menu" id="user-menu">
-                            <button class="user-avatar" id="user-menu-btn">
-                                <img src="https://via.placeholder.com/40x40" alt="User">
-                            </button>
-                            <div class="user-dropdown">
-                                <div class="user-info">
-                                    <div class="user-avatar-large">
-                                        <img src="https://via.placeholder.com/60x60" alt="User">
-                                    </div>
-                                    <div class="user-details">
-                                        <div class="user-name">Kullanıcı Adı</div>
-                                        <div class="user-email">user@example.com</div>
-                                    </div>
-                                </div>
-                                <div class="menu-items">
-                                    <a href="#" class="menu-item" onclick="showProfile()">
-                                        <i class="fas fa-user"></i>
-                                        Profil
-                                    </a>
-                                    <a href="#" class="menu-item" onclick="showSettings()">
-                                        <i class="fas fa-cog"></i>
-                                        Ayarlar
-                                    </a>
-                                    <a href="#" class="menu-item" onclick="showHelp()">
-                                        <i class="fas fa-question-circle"></i>
-                                        Yardım
-                                    </a>
-                                    <div class="menu-divider"></div>
-                                    <a href="#" class="menu-item logout" onclick="logout()">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                        Çıkış Yap
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Hero Section -->
-            <section class="hero-section">
-                <div class="hero-content">
-                    <div class="hero-text">
-                        <h1 class="hero-title">Medya Koleksiyonunuz</h1>
-                        <p class="hero-subtitle">Fotoğraflarınızı ve videolarınızı Netflix tarzı bir deneyimle saklayın</p>
-                        <div class="hero-stats">
-                            <div class="stat-item">
-                                <span class="stat-number" id="albums-count">0</span>
-                                <span class="stat-label">Albüm</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number" id="media-count">0</span>
-                                <span class="stat-label">Medya</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hero-actions">
-                        <button class="btn-primary" onclick="showCreate()">
-                            <i class="fas fa-plus"></i>
-                            Yeni Albüm Oluştur
-                        </button>
-                        <button class="btn-secondary" onclick="showAllFeatured()">
-                            <i class="fas fa-th-large"></i>
-                            Tümünü Gör
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Featured Albums -->
-            <section class="featured-section">
-                <div class="section-header">
-                    <h2 class="section-title">Öne Çıkan Albümler</h2>
-                    <div class="section-controls">
-                        <button class="scroll-btn" onclick="scrollFeatured('left')">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button class="scroll-btn" onclick="scrollFeatured('right')">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="featured-items" id="featured-items">
-                    <!-- Featured albums will be rendered here -->
-                </div>
-            </section>
-
-            <!-- Albums Grid -->
-            <section class="albums-section">
-                <div class="section-header">
-                    <h2 class="section-title">Tüm Albümler</h2>
-                    <div class="view-controls">
-                        <div class="sort-options">
-                            <select class="sort-select">
-                                <option value="newest">En Yeni</option>
-                                <option value="oldest">En Eski</option>
-                                <option value="name">İsme Göre</option>
-                                <option value="size">Boyuta Göre</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="albums-grid" id="albums-grid">
-                    <!-- Albums will be rendered here -->
-                </div>
-            </section>
-
-            <!-- Empty State -->
-            <div class="empty-state" id="empty-state" style="display: none;">
-                <div class="empty-icon">
-                    <i class="fas fa-images"></i>
-                </div>
-                <h3>Henüz albümünüz yok</h3>
-                <p>İlk albümünüzü oluşturarak medya koleksiyonunuzu başlatın</p>
-                <button class="btn-primary" onclick="showCreate()">
-                    <i class="fas fa-plus"></i>
-                    İlk Albümü Oluştur
-                </button>
-            </div>
-        </main>
-    </div>
-
-    <!-- Media Modal -->
-    <div class="media-modal" id="media-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="modal-close" onclick="closeModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="modal-media">
-                    <!-- Media will be displayed here -->
-                </div>
-                
-                <div class="modal-info">
-                    <h3 id="modal-title"></h3>
-                    <p id="modal-description"></p>
-                    <div class="modal-actions">
-                        <button class="modal-action-btn" onclick="likeMedia()" title="Beğen">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                        <button class="modal-action-btn" onclick="downloadMedia()" title="İndir">
-                            <i class="fas fa-download"></i>
-                        </button>
-                        <button class="modal-action-btn" onclick="shareMedia()" title="Paylaş">
-                            <i class="fas fa-share"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <div class="social-login">
+          <button id="google-login-btn" class="social-btn google">
+            <i class="fab fa-google"></i> Google ile Giriş
+          </button>
+          <button id="apple-login-btn" class="social-btn apple">
+            <i class="fab fa-apple"></i> Apple ile Giriş
+          </button>
+          <button id="guest-login-btn" class="social-btn guest">
+            <i class="fas fa-user-secret"></i> Misafir Girişi
+          </button>
         </div>
-    </div>
 
-    <!-- Scripts -->
-    <script src="firebase-config.js"></script>
-    <script src="script.js"></script>
+        <div class="auth-switch">
+          <span>Hesabınız yok mu?</span>
+          <a href="#" id="auth-switch-link">Kaydolun</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Application -->
+  <div id="main-app" class="main-app" style="display:none;">
+    <header class="premium-header">
+      <div class="logo">
+        <i class="fas fa-play-circle"></i> MYFLIX
+      </div>
+      <nav>
+        <button class="nav-item" id="nav-home"><i class="fas fa-home"></i> Anasayfa</button>
+        <button class="nav-item" id="nav-explore"><i class="fas fa-compass"></i> Keşfet</button>
+        <button class="nav-item" id="nav-albums"><i class="fas fa-images"></i> Albümler</button>
+        <button class="nav-item" id="nav-create"><i class="fas fa-plus-circle"></i> Oluştur</button>
+      </nav>
+      <div class="user-menu">
+        <img src="https://via.placeholder.com/40" alt="User" id="user-avatar">
+        <div id="user-dropdown" class="dropdown">
+          <p id="user-name">Kullanıcı</p>
+          <p id="user-email">user@example.com</p>
+          <button id="logout-btn"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Medya Koleksiyonunuz</h1>
+        <p>Fotoğraflarınızı ve videolarınızı Netflix tarzı bir deneyimle saklayın</p>
+        <button class="btn-primary" id="create-album-btn">Yeni Albüm Oluştur</button>
+      </section>
+      <section id="albums-grid"></section>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="firebase-config.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
