@@ -1,95 +1,27 @@
-@ -0,0 +1,442 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyFlix Galeri</title>
+    <title>MyFlix - Kişisel Medya Galeriniz</title>
+    <meta name="description" content="Fotoğraflarınızı ve videolarınızı Netflix tarzı modern bir arayüzde saklayın ve paylaşın.">
     
-    <!-- Premium Font Packages -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Icon Libraries -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
-    <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Premium Navigation Header -->
-    <header class="premium-header">
-        <div class="header-container">
-            <div class="logo-section">
-                <div class="logo">
-                    <i class="fas fa-play-circle"></i>
-                    <span>MYFLIX</span>
-                </div>
-            </div>
-            
-            <nav class="main-nav">
-                <button class="nav-item active" onclick="showHome()">
-                    <i class="fas fa-home"></i>
-                    <span>Ana Sayfa</span>
-                </button>
-                <button class="nav-item" onclick="showExplore()">
-                    <i class="fas fa-compass"></i>
-                    <span>Keşfet</span>
-                </button>
-                <button class="nav-item" onclick="showAlbums()">
-                    <i class="fas fa-photo-video"></i>
-                    <span>Albümlerim</span>
-                </button>
-                <button class="nav-item" onclick="showCreate()">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Oluştur</span>
-                </button>
-            </nav>
-            
-            <div class="user-section">
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Ara...">
-                </div>
-                <div class="user-menu" onclick="toggleUserMenu()">
-                    <img src="https://picsum.photos/seed/avatar/40/40" alt="User" class="user-avatar">
-                    <i class="fas fa-chevron-down"></i>
-                    <div class="user-dropdown" id="user-dropdown">
-                        <div class="user-info-header">
-                            <img src="https://picsum.photos/seed/avatar/60/60" alt="User">
-                            <div class="user-details">
-                                <h4 id="user-display-name">Kullanıcı</h4>
-                                <p id="user-display-email">user@example.com</p>
-                            </div>
-                        </div>
-                        <div class="dropdown-menu">
-                            <button onclick="showProfile()">
-                                <i class="fas fa-user"></i>
-                                Profil
-                            </button>
-                            <button onclick="showSettings()">
-                                <i class="fas fa-cog"></i>
-                                Ayarlar
-                            </button>
-                            <button onclick="showHelp()">
-                                <i class="fas fa-question-circle"></i>
-                                Yardım
-                            </button>
-                            <div class="dropdown-divider"></div>
-                            <button onclick="logout()" class="logout-btn">
-                                <i class="fas fa-sign-out-alt"></i>
-                                Çıkış Yap
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
 
-    <!-- Authentication Section -->
+    <div id="global-loader" class="loader-container">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
     <section id="auth-section" class="auth-section">
         <div class="auth-background">
             <div class="auth-overlay"></div>
@@ -97,347 +29,299 @@
                 <div class="shape shape-1"></div>
                 <div class="shape shape-2"></div>
                 <div class="shape shape-3"></div>
-                <div class="shape shape-4"></div>
             </div>
         </div>
         
         <div class="auth-container">
             <div class="auth-card">
-                <div class="auth-header">
+                <header class="auth-header">
                     <div class="auth-logo">
                         <i class="fas fa-play-circle"></i>
-                        <span>MYFLIX</span>
+                        <span class="logo-text">MYFLIX</span>
                     </div>
-                    <h1 id="auth-title">Giriş Yap</h1>
-                    <p id="auth-subtitle">Galerinize başlayın</p>
-                </div>
-                
-                <div class="auth-content">
-                    <form id="auth-form" class="auth-form">
-                        <div class="input-group">
-                            <div class="input-wrapper">
-                                <i class="fas fa-envelope"></i>
-                                <input type="email" id="email" placeholder="E-posta adresi" required>
-                            </div>
-                        </div>
-                        
-                        <div class="input-group">
-                            <div class="input-wrapper">
-                                <i class="fas fa-lock"></i>
-                                <input type="password" id="password" placeholder="Şifre" required>
-                                <button type="button" class="toggle-password" onclick="togglePassword()">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="auth-btn primary" id="auth-submit-btn">
+                    <h1 class="auth-title" id="auth-title">Giriş Yap</h1>
+                    <p class="auth-subtitle" id="auth-subtitle">Dijital koleksiyonunuza erişin</p>
+                </header>
+
+                <form id="auth-form" class="auth-form" novalidate>
+                    <div class="input-group name-field" id="name-group" style="display: none;">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="name" name="name" placeholder="Adınız Soyadınız" autocomplete="name">
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="email" name="email" placeholder="E-posta adresi" required autocomplete="email">
+                    </div>
+
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" placeholder="Parola" required autocomplete="current-password">
+                        <button type="button" id="toggle-password" class="toggle-password" aria-label="Şifreyi göster">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="auth-submit-btn" class="btn-primary full-width">
                             <span class="btn-text">Giriş Yap</span>
-                            <div class="btn-loader" style="display: none;">
-                                <div class="loader"></div>
-                            </div>
-                        </button>
-                    </form>
-                    
-                    <div class="auth-divider">
-                        <span>veya</span>
-                    </div>
-                    
-                    <div class="social-auth">
-                        <button class="social-btn google" onclick="quickLogin('google')">
-                            <i class="fab fa-google"></i>
-                            <span>Google ile Devam Et</span>
-                        </button>
-                        <button class="social-btn apple" onclick="quickLogin('apple')">
-                            <i class="fab fa-apple"></i>
-                            <span>Apple ile Devam Et</span>
-                        </button>
-                        <button class="social-btn guest" onclick="quickLogin('guest')">
-                            <i class="fas fa-user-secret"></i>
-                            <span>Misafir Olarak Devam Et</span>
+                            <div class="btn-loader" style="display: none;"><div class="loader"></div></div>
                         </button>
                     </div>
-                    
-                    <div class="auth-footer">
-                        <p id="auth-switch-text">
-                            Hesabınız yok mu? 
-                            <a href="#" onclick="toggleAuthMode()" id="auth-switch-link">Kayıt Ol</a>
-                        </p>
-                    </div>
+                </form>
+
+                <div class="auth-divider"><span>veya</span></div>
+
+                <div class="social-login">
+                    <button type="button" id="google-login-btn" class="social-btn google-btn">
+                        <i class="fab fa-google"></i> <span class="mobile-hide">Google ile devam et</span>
+                    </button>
+                    <button type="button" class="social-btn guest-btn" id="guest-login-btn">
+                        <i class="fas fa-user-secret"></i> <span class="mobile-hide">Misafir Girişi</span>
+                    </button>
+                </div>
+
+                <div class="auth-switch">
+                    <span id="auth-switch-text">MyFlix'te yeni misiniz?</span>
+                    <button type="button" id="auth-switch-btn" class="link-btn">Şimdi kaydolun</button>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Main Application -->
-    <main class="main-app" style="display: none;">
-        <!-- Hero Section -->
-        <section id="hero-section" class="hero-section">
-            <div class="hero-background">
-                <div class="hero-overlay"></div>
-                <div class="hero-particles">
-                    <div class="particle"></div>
-                    <div class="particle"></div>
-                    <div class="particle"></div>
-                    <div class="particle"></div>
-                    <div class="particle"></div>
+    <div id="main-app" class="main-app" style="display:none;">
+        
+        <header class="app-header premium-header">
+            <div class="header-content">
+                <div class="logo-area">
+                    <i class="fas fa-play-circle text-primary"></i>
+                    <span class="logo-text">MYFLIX</span>
+                </div>
+
+                <nav class="main-nav">
+                    <button class="nav-link active" data-target="home-view" onclick="showHome()">
+                        <i class="fas fa-home"></i> <span>Ana Sayfa</span>
+                    </button>
+                    <button class="nav-link" data-target="albums-view" onclick="showAlbums()">
+                        <i class="fas fa-layer-group"></i> <span>Albümlerim</span>
+                    </button>
+                    <button class="nav-link" data-target="create-view" onclick="showCreate()">
+                        <i class="fas fa-plus-circle"></i> <span>Oluştur</span>
+                    </button>
+                </nav>
+
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="global-search" placeholder="Ara...">
+                    </div>
+                    
+                    <div class="user-menu-container">
+                        <button id="user-menu-trigger" class="user-avatar-btn">
+                            <img src="https://via.placeholder.com/40" alt="Profil" id="header-avatar">
+                        </button>
+                        
+                        <div class="dropdown-menu" id="user-dropdown">
+                            <div class="dropdown-header">
+                                <strong id="dropdown-name">Kullanıcı</strong>
+                                <small id="dropdown-email">user@email.com</small>
+                            </div>
+                            <hr>
+                            <button class="dropdown-item" onclick="showSettings()"><i class="fas fa-cog"></i> Ayarlar</button>
+                            <button class="dropdown-item text-danger" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Çıkış</button>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </header>
+
+        <main id="app-content">
             
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1 class="hero-title">
-                        <span class="gradient-text">Galeriniz</span>
-                        <br>
-                        <span class="highlight-text">Anında Hazır</span>
-                    </h1>
-                    <p class="hero-description">
-                        Profesyonel albümler oluşturun, medyalarınızı düzenleyin ve dünyayla paylaşın. 
-                        Saniyeler içinde etkileyici galeriler hazırlayın.
-                    </p>
-                    <div class="hero-actions">
-                        <button class="hero-btn primary" onclick="showCreate()">
-                            <i class="fas fa-rocket"></i>
-                            <span>Hızlı Başla</span>
-                        </button>
-                        <button class="hero-btn secondary" onclick="showExplore()">
-                            <i class="fas fa-play-circle"></i>
-                            <span>Keşfet</span>
-                        </button>
+            <section id="home-view" class="view-section active">
+                <div class="hero-banner">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-text">
+                        <h1>Anılarınız, <span class="gradient-text">Sizin Sahneniz.</span></h1>
+                        <p>Tüm fotoğraflarınız ve videolarınız tek bir yerde, sinematik bir deneyimle.</p>
+                        <div class="hero-btns">
+                            <button class="btn-primary" onclick="showCreate()">
+                                <i class="fas fa-play"></i> Albüm Oluştur
+                            </button>
+                            <button class="btn-secondary" onclick="showAlbums()">
+                                <i class="fas fa-info-circle"></i> Koleksiyonum
+                            </button>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat-item"><span id="stat-albums">0</span> Albüm</div>
+                            <div class="stat-item"><span id="stat-media">0</span> Medya</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-row">
+                    <h3 class="row-title">Son Eklenenler</h3>
+                    <div class="media-scroller" id="recent-media-scroller">
+                        <div class="loading-placeholder">Yükleniyor...</div>
+                    </div>
+                </div>
+
+                <div class="content-row">
+                    <h3 class="row-title">Öne Çıkan Albümler</h3>
+                    <div class="media-scroller" id="featured-albums-scroller">
+                        </div>
+                </div>
+            </section>
+
+            <section id="albums-view" class="view-section" style="display: none;">
+                <div class="section-header">
+                    <h2>Albümlerim</h2>
+                    <div class="filter-controls">
+                        <select id="sort-albums">
+                            <option value="date-desc">En Yeni</option>
+                            <option value="name-asc">A-Z Sıralı</option>
+                        </select>
+                        <div class="view-toggles">
+                            <button class="icon-btn active" data-view="grid"><i class="fas fa-th"></i></button>
+                            <button class="icon-btn" data-view="list"><i class="fas fa-list"></i></button>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="hero-stats">
-                    <div class="stat-card">
-                        <div class="stat-number" id="stat-albums">0</div>
-                        <div class="stat-label">Albüm</div>
+                <div id="albums-grid" class="grid-layout">
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="stat-media">0</div>
-                        <div class="stat-label">Medya</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="stat-views">0</div>
-                        <div class="stat-label">Görüntüleme</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Featured Content -->
-        <section id="featured-section" class="featured-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-star"></i>
-                    Öne Çıkan İçerikler
-                </h2>
-                <button class="see-all-btn" onclick="showAllFeatured()">
-                    <span>Tümünü Gör</span>
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-            </div>
-            
-            <div class="featured-carousel">
-                <div class="featured-container" id="featured-container">
-                    <!-- Featured items will be added dynamically -->
-                </div>
-                <div class="carousel-controls">
-                    <button class="carousel-btn prev" onclick="scrollFeatured('prev')">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button class="carousel-btn next" onclick="scrollFeatured('next')">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Recent Albums -->
-        <section id="albums-section" class="albums-section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <i class="fas fa-photo-video"></i>
-                    Son Albümleriniz
-                </h2>
-                <div class="view-options">
-                    <button class="view-btn active" onclick="setView('grid')" data-view="grid">
-                        <i class="fas fa-th"></i>
-                    </button>
-                    <button class="view-btn" onclick="setView('list')" data-view="list">
-                        <i class="fas fa-list"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="albums-grid" id="albums-grid">
-                <!-- Albums will be added dynamically -->
-            </div>
-        </section>
-
-        <!-- Create Album Section -->
-        <section id="create-section" class="create-section" style="display: none;">
-            <div class="create-container">
-                <div class="create-header">
-                    <h2 class="create-title">
-                        <i class="fas fa-plus-circle"></i>
-                        Yeni Albüm Oluştur
-                    </h2>
-                    <p class="create-description">
-                        Albümünüzü saniyeler içinde oluşturun ve paylaşın
-                    </p>
-                </div>
                 
-                <div class="create-form-container">
-                    <form id="create-form" class="create-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-heading"></i>
-                                    Albüm Adı
-                                </label>
-                                <div class="input-wrapper">
-                                    <input type="text" id="album-name" placeholder="Albümünüzün adı" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-tag"></i>
-                                    Etiketler
-                                </label>
-                                <div class="input-wrapper">
-                                    <input type="text" id="album-tags" placeholder="manzara, doğa, fotoğraf">
-                                </div>
-                            </div>
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <i class="fas fa-film"></i>
+                    <h3>Burası çok sessiz...</h3>
+                    <p>Henüz hiç albüm oluşturmadınız.</p>
+                    <button class="btn-primary" onclick="showCreate()">İlk Albümü Oluştur</button>
+                </div>
+            </section>
+
+            <section id="create-view" class="view-section" style="display: none;">
+                <div class="create-container">
+                    <div class="create-header">
+                        <h2><i class="fas fa-plus-circle"></i> Yeni İçerik Ekle</h2>
+                        <p>Albümünüzü saniyeler içinde oluşturun ve paylaşın</p>
+                    </div>
+
+                    <div class="create-options">
+                        <div class="create-card active" id="tab-new-album">
+                            <i class="fas fa-folder-plus"></i>
+                            <h3>Yeni Albüm</h3>
+                        </div>
+                        <div class="create-card" id="tab-upload-media">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Medya Yükle</h3>
+                        </div>
+                    </div>
+
+                    <form id="create-album-form" class="create-form">
+                        <div class="form-group">
+                            <label><i class="fas fa-heading"></i> Albüm Adı</label>
+                            <input type="text" id="new-album-name" placeholder="Örn: Yaz Tatili 2025" required>
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label">
-                                <i class="fas fa-align-left"></i>
-                                Açıklama
-                            </label>
-                            <div class="textarea-wrapper">
-                                <textarea id="album-description" placeholder="Albümünüz hakkında bilgi verin..." rows="3"></textarea>
+                            <label><i class="fas fa-tag"></i> Etiketler</label>
+                            <input type="text" id="album-tags" placeholder="manzara, doğa, aile">
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-align-left"></i> Açıklama</label>
+                            <textarea id="new-album-desc" rows="3" placeholder="Bu albüm ne hakkında?"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Kapak Görseli</label>
+                            <div class="file-drop-area" id="cover-drop-area">
+                                <span class="fake-btn">Görsel Seç</span>
+                                <span class="file-msg">veya sürükleyin</span>
+                                <input class="file-input" type="file" id="album-cover-file" accept="image/*">
                             </div>
                         </div>
                         
-                        <div class="upload-section">
-                            <div class="upload-area" id="upload-area">
-                                <div class="upload-content">
-                                    <div class="upload-icon">
-                                        <i class="fas fa-cloud-upload-alt"></i>
-                                    </div>
-                                    <h3>Fotoğrafları ve Videoları Yükleyin</h3>
-                                    <p>Dosyalarınızı sürükleyin veya tıklayın seçin</p>
-                                    <button type="button" class="upload-btn" onclick="document.getElementById('file-input').click()">
-                                        <i class="fas fa-folder-open"></i>
-                                        Dosya Seç
-                                    </button>
-                                    <input type="file" id="file-input" accept="image/*,video/*" multiple style="display: none;">
-                                </div>
-                            </div>
-                            
-                            <div class="preview-grid" id="preview-grid">
-                                <!-- Preview items will be added here -->
-                            </div>
-                        </div>
-                        
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary" onclick="showHome()">
-                                <i class="fas fa-times"></i>
-                                İptal
-                            </button>
-                            <button type="submit" class="btn-primary">
-                                <i class="fas fa-check"></i>
-                                Albümü Oluştur
-                            </button>
-                        </div>
+                        <button type="submit" class="btn-primary full-width">Oluştur</button>
                     </form>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Album Detail Section -->
-        <section id="album-detail-section" class="album-detail-section" style="display: none;">
-            <div class="album-detail-header">
-                <button class="back-btn" onclick="showAlbums()">
-                    <i class="fas fa-arrow-left"></i>
-                    Albümlere Dön
-                </button>
-                
-                <div class="album-info">
-                    <h2 id="album-detail-title"></h2>
-                    <p id="album-detail-description"></p>
-                    <div class="album-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-images"></i>
-                            <span id="album-media-count">0</span> öğe
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-eye"></i>
-                            <span id="album-views">0</span> görüntüleme
-                        </span>
-                        <span class="meta-item">
-                            <i class="fas fa-calendar"></i>
-                            <span id="album-date"></span>
-                        </span>
+            <section id="settings-view" class="view-section" style="display: none;">
+                <div class="settings-container">
+                    <h2>Hesap Ayarları</h2>
+                    <div class="settings-card">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Profil Görünümü</h4>
+                                <p>İsminizi ve profil fotoğrafınızı güncelleyin.</p>
+                            </div>
+                            <button class="btn-secondary">Düzenle</button>
+                        </div>
+                        <hr>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Depolama Alanı</h4>
+                                <p>%45 kullanılıyor</p>
+                            </div>
+                            <div class="progress-bar"><div class="fill" style="width: 45%"></div></div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="album-actions">
-                    <button class="action-btn" onclick="shareAlbum()" title="Paylaş">
-                        <i class="fas fa-share-alt"></i>
-                    </button>
-                    <button class="action-btn" onclick="editAlbum()" title="Düzenle">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn danger" onclick="deleteAlbum()" title="Sil">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="album-content">
-                <div class="media-grid" id="media-grid">
-                    <!-- Media items will be added here -->
-                </div>
-            </div>
-        </section>
-    </main>
+            </section>
 
-    <!-- Media Modal -->
-    <div id="media-modal" class="media-modal" style="display: none;">
-        <div class="modal-backdrop" onclick="closeModal()"></div>
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">
-                <i class="fas fa-times"></i>
-            </button>
-            
-            <div class="modal-body">
-                <div id="modal-media-container">
-                    <!-- Media will be displayed here -->
+            <section id="album-detail-view" class="view-section" style="display: none;">
+                <div class="album-detail-header">
+                    <button class="back-btn" id="back-to-albums-btn" onclick="showAlbums()">
+                        <i class="fas fa-arrow-left"></i> Geri Dön
+                    </button>
+                    
+                    <div class="album-info-hero">
+                        <h2 id="detail-title">Albüm Başlığı</h2>
+                        <p id="detail-desc">Açıklama</p>
+                        <div class="album-meta">
+                            <span id="detail-date">2024</span>
+                            <span class="meta-item"><i class="fas fa-images"></i> <span id="detail-count">0</span> öğe</span>
+                        </div>
+                    </div>
+
+                    <div class="album-actions">
+                        <button class="action-btn" id="btn-share-album" title="Paylaş"><i class="fas fa-share-alt"></i></button>
+                        <button class="action-btn" id="btn-edit-album" title="Düzenle"><i class="fas fa-edit"></i></button>
+                        <button class="action-btn danger" id="btn-delete-album" title="Sil"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-            </div>
+
+                <div class="media-grid" id="album-media-grid">
+                    </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="media-modal" class="modal">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <div class="modal-content">
+            <div id="modal-media-wrapper">
+                </div>
             
             <div class="modal-info">
-                <h3 id="modal-title"></h3>
-                <p id="modal-description"></p>
+                <h3 id="modal-media-title"></h3>
                 <div class="modal-actions">
-                    <button class="modal-action-btn" onclick="likeMedia()" title="Beğen">
-                        <i class="fas fa-heart"></i>
-                    </button>
-                    <button class="modal-action-btn" onclick="downloadMedia()" title="İndir">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="modal-action-btn" onclick="shareMedia()" title="Paylaş">
-                        <i class="fas fa-share"></i>
-                    </button>
+                    <button class="modal-action-btn" title="Beğen"><i class="fas fa-heart"></i></button>
+                    <button class="modal-action-btn" title="İndir"><i class="fas fa-download"></i></button>
+                    <button class="modal-action-btn" title="Paylaş"><i class="fas fa-share"></i></button>
+                    <button class="modal-action-btn text-danger" title="Sil"><i class="fas fa-trash"></i></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
