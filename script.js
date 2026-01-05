@@ -418,6 +418,19 @@
     return first?.id || null;
   }
 
+  function togglePassword() {
+    const input = $('#password');
+    const icon = $('.toggle-password i');
+    if (!input) return;
+    const isPw = input.getAttribute('type') !== 'text';
+    input.setAttribute('type', isPw ? 'text' : 'password');
+    if (icon) icon.className = `fas ${isPw ? 'fa-eye-slash' : 'fa-eye'}`;
+  }
+
+  function toggleAuthMode() {
+    setAuthUI(state.authMode === 'login' ? 'signup' : 'login');
+  }
+
   function renderFeatured() {
     const container = $('#featured-container');
     if (!container) return;
@@ -579,13 +592,14 @@
       ? `<video id="modal-video" controls autoplay playsinline></video>`
       : `<img id="modal-img" alt="${escapeHtml(media.name || 'Medya')}"/>`;
 
-    ensureMediaUrl(mediaId).then((url) => {
-      if (!url) return;
+    // Firebase Storage'dan downloadUrl kullan
+    const url = media.downloadUrl || null;
+    if (url) {
       const v = document.getElementById('modal-video');
       const i = document.getElementById('modal-img');
       if (v && v.tagName === 'VIDEO') v.setAttribute('src', url);
       if (i && i.tagName === 'IMG') i.setAttribute('src', url);
-    });
+    }
 
     modal.classList.add('open');
     modal.style.display = '';
@@ -611,14 +625,16 @@
       if (!m?.id) continue;
       const els = document.querySelectorAll(`[data-media-src="${CSS.escape(m.id)}"]`);
       if (!els.length) continue;
-      ensureMediaUrl(m.id).then((url) => {
-        if (!url) return;
+      
+      // Firebase Storage'dan downloadUrl kullan
+      const url = m.downloadUrl || null;
+      if (url) {
         els.forEach((el) => {
           if (el.tagName === 'IMG' || el.tagName === 'VIDEO') {
             el.setAttribute('src', url);
           }
         });
-      });
+      }
     }
   }
 
@@ -627,10 +643,16 @@
     imgs.forEach((img) => {
       const id = img.getAttribute('data-cover-src');
       if (!id) return;
-      ensureMediaUrl(id).then((url) => {
-        if (!url) return;
-        img.setAttribute('src', url);
-      });
+      
+      // Firebase Storage'dan URL bul
+      for (const album of state.albums) {
+        const media = Array.isArray(album.media) ? album.media : [];
+        const mediaItem = media.find(m => m.id === id);
+        if (mediaItem?.downloadUrl) {
+          img.setAttribute('src', mediaItem.downloadUrl);
+          break;
+        }
+      }
     });
   }
 
@@ -639,10 +661,16 @@
     imgs.forEach((img) => {
       const id = img.getAttribute('data-featured-src');
       if (!id) return;
-      ensureMediaUrl(id).then((url) => {
-        if (!url) return;
-        img.setAttribute('src', url);
-      });
+      
+      // Firebase Storage'dan URL bul
+      for (const album of state.albums) {
+        const media = Array.isArray(album.media) ? album.media : [];
+        const mediaItem = media.find(m => m.id === id);
+        if (mediaItem?.downloadUrl) {
+          img.setAttribute('src', mediaItem.downloadUrl);
+          break;
+        }
+      }
     });
   }
 
@@ -915,6 +943,38 @@ async function handleAuthSubmit() {
         updateStats();
       }
     });
+  }
+
+  function downloadMedia() {
+    if (!activeModalRef) return;
+    const album = state.albums.find((a) => a.id === activeModalRef.albumId);
+    const media = album?.media?.find((m) => m.id === activeModalRef.mediaId);
+    if (!media) return;
+
+    // Firebase Storage'dan downloadUrl kullan
+    const url = media.downloadUrl || null;
+    if (url) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = media.name || (media.type === 'video' ? 'video.mp4' : 'image.jpg');
+      a.setAttribute('target', '_blank');
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      toast('İndiriliyor', media.name || 'Medya', 'info');
+    } else {
+      toast('Hata', 'Medya indirilemiyor', 'danger');
+    }
+  }
+
+  function shareMedia() {
+    if (!activeModalRef) return;
+    const album = state.albums.find((a) => a.id === activeModalRef.albumId);
+    const media = album?.media?.find((m) => m.id === activeModalRef.mediaId);
+    if (!album || !media) return;
+
+    const text = `MYFLIX Medya: ${media.name || ''}\nAlbüm: ${album.name || ''}`;
+    copyToClipboard(text);
   }
 
   function copyToClipboard(text) {

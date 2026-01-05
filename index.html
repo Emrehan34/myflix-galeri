@@ -149,15 +149,15 @@
                     </div>
                     
                     <div class="social-auth">
-                        <button class="social-btn google" onclick="quickLogin('google')">
+                        <button class="social-btn google" id="google-login-btn">
                             <i class="fab fa-google"></i>
                             <span>Google ile Devam Et</span>
                         </button>
-                        <button class="social-btn apple" onclick="quickLogin('apple')">
+                        <button class="social-btn apple" onclick="toast('Apple Girişi', 'Apple girişi yakında eklenecek.', 'info')">
                             <i class="fab fa-apple"></i>
                             <span>Apple ile Devam Et</span>
                         </button>
-                        <button class="social-btn guest" onclick="quickLogin('guest')">
+                        <button class="social-btn guest" onclick="toast('Misafir Girişi', 'Misafir girişi Firebase ile yakında eklenecek.', 'info')">
                             <i class="fas fa-user-secret"></i>
                             <span>Misafir Olarak Devam Et</span>
                         </button>
